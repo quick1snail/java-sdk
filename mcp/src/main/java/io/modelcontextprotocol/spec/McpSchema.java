@@ -128,11 +128,22 @@ public final class McpSchema {
 
 	}
 
+	/*
+	lwl
+	sealed jdk17 定义了一个受限制的接口Request，这样限制了哪些类和接口可以实现这个接口
+	permits 用于列出允许实现这个接口的类或子接口
+	 */
 	public sealed interface Request
 			permits InitializeRequest, CallToolRequest, CreateMessageRequest, CompleteRequest, GetPromptRequest {
 
 	}
 
+	/*
+	lwl
+	Jackson 数据绑定库中的一个实用类，通常用于帮助在反序列化时处理泛型类型。
+	在 Java 中，由于类型擦除的机制，运行时无法获取泛型的具体类型，因此 Jackson 提供了 TypeReference 以便明确类型信息
+	确保了 Jackson 能够准确地进行反序列化而不会丢失类型信息
+	 */
 	private static final TypeReference<HashMap<String, Object>> MAP_TYPE_REF = new TypeReference<>() {
 	};
 
@@ -145,6 +156,10 @@ public final class McpSchema {
 	 * @throws IOException If there's an error during deserialization
 	 * @throws IllegalArgumentException If the JSON structure doesn't match any known
 	 * message type
+	 */
+	/*
+	lwl
+	反序列化为JSONRPCMessage
 	 */
 	public static JSONRPCMessage deserializeJsonRpcMessage(ObjectMapper objectMapper, String jsonText)
 			throws IOException {
@@ -176,6 +191,26 @@ public final class McpSchema {
 
 	}
 
+	/*
+	lwl
+	定义一个Java Record类 Java 14 引入的新特性，简化了数据载体类的定义。这种类自动提供了构造器以及 equals、hashCode、和 toString 方法。
+	实现接口 JSONRPCMessage
+	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	public class JSONRPCRequest implements JSONRPCMessage {
+	    @JsonProperty("jsonrpc")
+		private String jsonrpc;
+
+		...其他字段...
+
+		无参构造、全参构造
+
+		getter/setter
+
+		equals、hashCode、toString
+	}
+	Java Record 简化了数据载体类的定义和使用，非常适合纯数据传输对象
+	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record JSONRPCRequest( // @formatter:off
@@ -199,6 +234,15 @@ public final class McpSchema {
 			@JsonProperty("jsonrpc") String jsonrpc,
 			@JsonProperty("id") Object id,
 			@JsonProperty("result") Object result,
+			/*
+			lwl
+			如果用传统的方式来定义的话：
+			1、创建类 JSONRPCResponse implements JSONRPCMessage
+			其有4个字段，其中第4个字段是error，它的类型是JSONRPCError
+			2、再来一个类JSONRPCError
+			其有3个字段
+			注意，这里的接口JSONRPCMessage，只对JSONRPCResponse负责
+			 */
 			@JsonProperty("error") JSONRPCError error) implements JSONRPCMessage {
 
 		@JsonInclude(JsonInclude.Include.NON_ABSENT)
